@@ -13,6 +13,7 @@ add_library(corex-core SHARED
     WindowManager.cpp
     asset_functions.cpp
     math_functions.cpp
+    draw_functions.cpp
     components/Text.cpp
     ds/Tree.hpp
     ds/TreeNode.hpp

@@ -1,3 +1,3 @@
 cmake_minimum_required(VERSION 3.13)
 
-add_subdirectory(bpt/)
+add_subdirectory(gwo_viz/)

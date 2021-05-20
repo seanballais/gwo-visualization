@@ -403,7 +403,7 @@ namespace corex::core
       }
     }
 
-    GPU_FlushBlitBuffer();
+    //GPU_FlushBlitBuffer();
 
     this->debugUI.render();
 

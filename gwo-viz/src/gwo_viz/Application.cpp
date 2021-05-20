@@ -6,24 +6,24 @@
 #include <corex/core/Application.hpp>
 #include <corex/core/Scene.hpp>
 
-#include <bpt/Application.hpp>
-#include <bpt/MainScene.hpp>
+#include <gwo_viz/Application.hpp>
+#include <gwo_viz/MainScene.hpp>
 
-namespace bpt
+namespace gwo_viz
 {
   Application::Application(const eastl::string& windowTitle)
     : corex::core::Application(windowTitle) {}
 
   void Application::init()
   {
-    std::cout << "Initializing BPT... Bleep, bloop, bleep." << std::endl;
-    auto& mainScene = this->sceneManager->addScene<bpt::MainScene>();
+    std::cout << "Initializing GWO Visualization..." << std::endl;
+    auto& mainScene = this->sceneManager->addScene<gwo_viz::MainScene>();
     this->sceneManager->setRootScene(mainScene);
   }
 
   void Application::dispose()
   {
-    std::cout << "Disposing BPT... Bleep, bloop, zzzzz." << std::endl;
+    std::cout << "Disposing GWO Visualization..." << std::endl;
   }
 }
 
@@ -31,7 +31,6 @@ namespace corex
 {
   eastl::unique_ptr<corex::core::Application> createApplication()
   {
-    return eastl::make_unique<bpt::Application>(
-      "BPT, the undergraduate thesis of Sean Ballais");
+    return eastl::make_unique<gwo_viz::Application>("GWO Visualization");
   }
 }

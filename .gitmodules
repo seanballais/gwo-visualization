@@ -18,7 +18,7 @@
 	url = https://github.com/electronicarts/EAAssert.git
 [submodule "libs/EABase"]
 	path = libs/EABase
-	url = ttps://github.com/electronicarts/EABase.git
+	url = https://github.com/electronicarts/EABase.git
 [submodule "libs/pcg-cpp"]
 	path = libs/pcg-cpp
 	url = https://github.com/imneme/pcg-cpp.git

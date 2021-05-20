@@ -29,9 +29,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/pcg-cpp/include)
 
 add_subdirectory(libs/)
 add_subdirectory(corex/)
-add_subdirectory(bpt/)
+add_subdirectory(gwo-viz/)
 
-target_link_libraries(bpt
+target_link_libraries(gwo-viz
     iprof
     corex-core
     imgui-impls

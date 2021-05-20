@@ -1,11 +1,11 @@
-#ifndef BPT_APPLICATION_HPP
-#define BPT_APPLICATION_HPP
+#ifndef GWOVIZ_APPLICATION_HPP
+#define GWOVIZ_APPLICATION_HPP
 
 #include <EASTL/string.h>
 
 #include <corex/core/Application.hpp>
 
-namespace bpt
+namespace gwo_viz
 {
   class Application : public corex::core::Application
   {

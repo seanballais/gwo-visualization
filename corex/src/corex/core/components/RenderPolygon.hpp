@@ -16,4 +16,9 @@ namespace corex::core
   };
 }
 
+namespace cx
+{
+  using namespace corex::core;
+}
+
 #endif

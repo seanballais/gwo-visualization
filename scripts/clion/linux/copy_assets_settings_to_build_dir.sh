@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script is for use with CLion. We need this so that we can copy any assets
-# and settings files to the build folder before running bpt.
+# and settings files to the build folder before running gwo_viz.
 
 echo "Copying assets and the settings file to the build assets folder, if" \
 	 "any were updated or new assets are added."

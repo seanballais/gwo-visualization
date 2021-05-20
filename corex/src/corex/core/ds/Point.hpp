@@ -8,4 +8,9 @@ namespace corex::core
   using Point = Vec2;
 }
 
+namespace cx
+{
+  using namespace corex::core;
+}
+
 #endif
