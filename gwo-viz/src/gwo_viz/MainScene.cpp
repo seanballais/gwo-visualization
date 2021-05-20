@@ -50,11 +50,17 @@ namespace gwo_viz
     : regionWidth(750.f)
     , regionHeight(550.f)
     , coordOrigin(15.f, 15.f)
-    , bestSol()
+    , bestSol(coordOrigin.x, coordOrigin.y)
     , ent_bestSol(entt::null)
     , numIterations(0)
     , numWolves(0)
     , currIterDisplayed(0)
+    , gwo()
+    , solutions()
+    , solutionEntities()
+    , isRunningGWO(false)
+    , isNewSolutionGenerated(false)
+    , isIterDisplayedChanged(false)
     , corex::core::Scene(registry, eventDispatcher, assetManager, camera) {}
 
   void MainScene::init()
@@ -80,6 +86,47 @@ namespace gwo_viz
 
   void MainScene::update(float timeDelta)
   {
+    if (this->isNewSolutionGenerated) {
+      for (auto& entity : this->solutionEntities) {
+        this->registry.destroy(entity);
+      }
+
+      this->solutionEntities.clear();
+
+      SDL_Color solutionColour;
+      auto& currIteration = this->solutions[this->currIterDisplayed];
+      for (int32_t i = 0; i < this->numWolves; i++) {
+        if (i == 0) {
+          // Entity for the alpha wolf.
+          solutionColour = SDL_Color{ 79, 10, 22, 255 };
+        } else if (i == 1) {
+          // Entity for the beta wolf.
+          solutionColour = SDL_Color{ 82, 43, 15, 255 };
+        } else if (i == 2) {
+          // Entity for the delta wolf.
+          solutionColour = SDL_Color{ 82, 78, 15, 255 };
+        } else {
+          solutionColour = SDL_Color{ 10, 41, 79, 255 };
+        }
+
+        this->solutionEntities.push_back(
+          this->createCircleEntity(currIteration[i].x, currIteration[i].y,
+                                   0.f, 5.f, true, solutionColour, 1)
+        );
+      }
+    }
+
+    if (this->isIterDisplayedChanged) {
+      for (int32_t i = 0; i < this->numWolves; i++) {
+        auto& wolfPos = this->getEntityComponent<cx::Position>(
+          solutionEntities[i]);
+        wolfPos.x = this->solutions[this->currIterDisplayed][i].x;
+        wolfPos.y = this->solutions[this->currIterDisplayed][i].y;
+      }
+
+      this->isIterDisplayedChanged = false;
+    }
+
     this->flashBestSolPosition(timeDelta);
 
     this->buildControls();
@@ -128,6 +175,8 @@ namespace gwo_viz
       float newX = cx::getRandomRealUniformly(coordOrigin.x, this->regionWidth);
       float newY = cx::getRandomRealUniformly(coordOrigin.y,
                                               this->regionHeight);
+      bestSol.x = newX;
+      bestSol.y = newY;
       bestSolPos.x = newX;
       bestSolPos.y = newY;
     }
@@ -135,13 +184,45 @@ namespace gwo_viz
     ImGui::Separator();
 
     if (ImGui::InputInt("No. of Iterations", &this->numIterations)) {
+      // We are not subtracting numIterations by 1 in consideration of the
+      // initial random population.
       this->currIterDisplayed = cx::clamp(this->currIterDisplayed,
-                                          0, this->numIterations - 1);
+                                          0, this->numIterations);
     }
 
     ImGui::InputInt("No. of Wolves", &this->numWolves);
 
-    ImGui::Button("Generate Solutions");
+    if (this->isRunningGWO) {
+      ImGui::Text("Iteration #%d of %d",
+                  this->gwo.getNumItersPerformed(),
+                  this->numIterations);
+    } else {
+      if (ImGui::Button("Generate Solutions")) {
+        this->isRunningGWO = true;
+        std::thread gwoThread{
+          [this](int32_t numIterations,
+                 int32_t numWolves,
+                 cx::Point bestSolution,
+                 cx::Point minPt,
+                 cx::Point maxPt) {
+            this->solutions = this->gwo.optimize(numIterations,
+                                                 numWolves,
+                                                 bestSolution,
+                                                 minPt,
+                                                 maxPt);
+            this->isRunningGWO = false;
+            this->isNewSolutionGenerated = true;
+          },
+          this->numIterations,
+          this->numWolves,
+          this->bestSol,
+          this->coordOrigin,
+          this->coordOrigin + cx::Point{ this->regionWidth, this->regionHeight }
+        };
+
+        gwoThread.detach();
+      }
+    }
 
     ImGui::Separator();
 
@@ -149,26 +230,48 @@ namespace gwo_viz
 
     if (ImGui::Button("<")) {
       if (this->numIterations > 0) {
+        // Only change the current iteration displayed if we have set a non-zero
+        // number of iterations.
+        //
+        // We are increasing numIterations by 1 in consideration of the
+        // initial random population.
         this->currIterDisplayed = cx::mod(this->currIterDisplayed - 1,
-                                          this->numIterations);
+                                          this->numIterations + 1);
+        this->isIterDisplayedChanged = true;
       }
     }
 
     ImGui::SameLine();
 
     if (ImGui::InputInt("", &this->currIterDisplayed)) {
+      // We are not subtracting numIterations by 1 in consideration of the
+      // initial random population.
       this->currIterDisplayed = cx::clamp(this->currIterDisplayed,
-                                          0, this->numIterations - 1);
+                                          0, this->numIterations);
     }
 
     ImGui::SameLine();
 
     if (ImGui::Button(">")) {
       if (this->numIterations > 0) {
+        // Only change the current iteration displayed if we have set a non-zero
+        // number of iterations.
+        //
+        // We are increasing numIterations by 1 in consideration of the
+        // initial random population.
         this->currIterDisplayed = cx::mod(this->currIterDisplayed + 1,
-                                          this->numIterations);
+                                          this->numIterations + 1);
+        this->isIterDisplayedChanged = true;
       }
     };
+
+    ImGui::Separator();
+
+    ImGui::Text("Legend:");
+    ImGui::Text("- Flashing Green Circle is the best position.");
+    ImGui::Text("- Red circle is the alpha wolf.");
+    ImGui::Text("- Orange circle is the beta wolf.");
+    ImGui::Text("- Yellow circle is the alpha wolf.");
 
     ImGui::End();
   }

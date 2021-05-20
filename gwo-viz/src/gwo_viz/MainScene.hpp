@@ -22,6 +22,8 @@
 #include <corex/core/events/MouseScrollEvent.hpp>
 #include <corex/core/events/sys_events.hpp>
 
+#include <gwo_viz/GWO.hpp>
+
 namespace gwo_viz
 {
   class MainScene : public corex::core::Scene
@@ -47,6 +49,14 @@ namespace gwo_viz
     int32_t numWolves;
 
     int32_t currIterDisplayed;
+
+    GWO gwo;
+    GWO::Solutions solutions;
+    std::vector<Scene::Entity> solutionEntities;
+    bool isRunningGWO;
+
+    bool isNewSolutionGenerated;
+    bool isIterDisplayedChanged;
 
     void flashBestSolPosition(float timeDelta);
 

@@ -488,6 +488,26 @@ namespace corex::core {
     return w;
   }
 
+  Vec2 pairwiseMult(const Vec2& p, const Vec2& q)
+  {
+    return Vec2{ p.x * q.x, p.y * q.y };
+  }
+
+  Vec2 pairwiseSubt(const Vec2& p, const float& a)
+  {
+    return Vec2{ p.x - a, p.y - a };
+  }
+
+  Vec2 pairwiseSubt(const float& a, const Vec2& p)
+  {
+    return Vec2{ a - p.x, a - p.y };
+  }
+
+  Vec2 vec2Abs(const Vec2& vec)
+  {
+    return Vec2{ std::fabs(vec.x), std::fabs(vec.y) };
+  }
+
   float signedDistPointToInfLine(const Point& point, const Line& line)
   {
     return setDecPlaces(dotProduct(lineNormalVector(line), (point - line.end)),
