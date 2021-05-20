@@ -1,5 +1,5 @@
-#ifndef BPT_MAIN_SCENE_HPP
-#define BPT_MAIN_SCENE_HPP
+#ifndef GWOVIZ_MAIN_SCENE_HPP
+#define GWOVIZ_MAIN_SCENE_HPP
 
 #include <atomic>
 
@@ -42,6 +42,11 @@ namespace gwo_viz
     cx::Point coordOrigin;
     cx::Point bestSol;
     cx::Scene::Entity ent_bestSol;
+
+    int32_t numIterations;
+    int32_t numWolves;
+
+    int32_t currIterDisplayed;
 
     void flashBestSolPosition(float timeDelta);
 
