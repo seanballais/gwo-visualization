@@ -9,19 +9,21 @@
 #include <corex/core/ds/Point.hpp>
 
 #include <gwo_viz/GWO.hpp>
+#include <gwo_viz/GWOResult.hpp>
 
 namespace gwo_viz
 {
   GWO::GWO()
     : numItersPerformed(0) {}
 
-  GWO::Solutions GWO::optimize(int32_t numIterations,
-                               int32_t numWolves,
-                               cx::Point bestSolution,
-                               cx::Point minPt,
-                               cx::Point maxPt)
+  GWOResult GWO::optimize(int32_t numIterations,
+                          int32_t numWolves,
+                          cx::Point bestSolution,
+                          cx::Point minPt,
+                          cx::Point maxPt)
   {
     GWO::Solutions solutions;
+    std::vector<cx::Point> wolfPreys;
 
     std::vector<cx::Point> pack;
     for (int32_t i = 0; i < numWolves; i++) {
@@ -41,15 +43,20 @@ namespace gwo_viz
         return aFitness < bFitness;
       });
 
+    cx::Point alphaWolf = pack[0];
+    cx::Point betaWolf = pack[1];
+    cx::Point deltaWolf = pack[2];
+
     solutions.push_back(pack);
+    wolfPreys.push_back((alphaWolf + betaWolf + deltaWolf) / 3.f);
 
     this->numItersPerformed = 0;
 
     float a = 2.f;
     for (int32_t t = 0; t < numIterations; t++) {
-      cx::Point alphaWolf = pack[0];
-      cx::Point betaWolf = pack[1];
-      cx::Point deltaWolf = pack[2];
+      alphaWolf = pack[0];
+      betaWolf = pack[1];
+      deltaWolf = pack[2];
 
       std::array<cx::Point, 3> Al;
       std::array<cx::Point, 3> Cl;
@@ -68,7 +75,21 @@ namespace gwo_viz
         Cl[n].y = 2 * r2l[n].y;
       }
 
-      for (int32_t j = 0; j < numWolves; j++) {
+      std::cout << "Al: "
+                << "(" << Al[0].x << ", " << Al[0].y << ") "
+                << "(" << Al[1].x << ", " << Al[1].y << ") "
+                << "(" << Al[2].x << ", " << Al[2].y << ")\n";
+      std::cout << "Cl: "
+                << "(" << Cl[0].x << ", " << Cl[0].y << ") "
+                << "(" << Cl[1].x << ", " << Cl[1].y << ") "
+                << "(" << Cl[2].x << ", " << Cl[2].y << ")\n";
+
+      for (int32_t j = 3; j < numWolves; j++) {
+        std::cout << "------" << j << "-------\n";
+        std::cout << "Wolves: "
+                  << "A: (" << alphaWolf.x << ", " << alphaWolf.y << ") "
+                  << "B: (" << betaWolf.x  << ", " << betaWolf.y << ") "
+                  << "D: (" << deltaWolf.x << ", " << deltaWolf.y << ")\n";
         // Generate the coefficient values.
         cx::Point Aw;
         cx::Point Cw;
@@ -95,7 +116,22 @@ namespace gwo_viz
         auto X2 = betaWolf - cx::pairwiseMult(Al[1], Db);
         auto X3 = deltaWolf - cx::pairwiseMult(Al[2], Dd);
 
-        pack[j] = (X1 + X2 + X3) / 3;
+        pack[j] = (X1 + X2 + X3) / 3.f;
+
+        std::cout << "Aw: "
+                  << "(" << Aw.x << ", " << Aw.y << ")\n";
+        std::cout << "Cw: "
+                  << "(" << Cw.x << ", " << Cw.y << ")\n";
+        std::cout << "Da: "
+                  << "(" << Da.x << ", " << Da.y << ")\n";
+        std::cout << "Db: "
+                  << "(" << Db.x << ", " << Db.y << ")\n";
+        std::cout << "Dd: "
+                  << "(" << Dd.x << ", " << Dd.y << ")\n";
+        std::cout << "X1: (" << X1.x << ", " << X1.y << ")\n";
+        std::cout << "X2: (" << X2.x << ", " << X2.y << ")\n";
+        std::cout << "X3: (" << X3.x << ", " << X3.y << ")\n";
+        std::cout << "Wolf: (" << pack[j].x << ", " << pack[j].y << ")\n";
       }
 
       std::sort(
@@ -109,12 +145,17 @@ namespace gwo_viz
         });
       solutions.push_back(pack);
 
+      wolfPreys.push_back((pack[0] + pack[1] + pack[2]) / 3.f);
+
       a = 2.f - (2.f * (static_cast<float>(t) / numIterations));
 
       this->numItersPerformed++;
     }
 
-    return solutions;
+    return GWOResult{
+      solutions,
+      wolfPreys
+    };
   }
 
   int32_t GWO::getNumItersPerformed()

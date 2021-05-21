@@ -50,14 +50,14 @@ namespace gwo_viz
     : regionWidth(750.f)
     , regionHeight(550.f)
     , coordOrigin(15.f, 15.f)
-    , bestSol(coordOrigin.x, coordOrigin.y)
     , ent_bestSol(entt::null)
     , numIterations(0)
     , numWolves(0)
     , currIterDisplayed(0)
     , gwo()
-    , solutions()
+    , gwoResult()
     , solutionEntities()
+    , preyEntity(entt::null)
     , isRunningGWO(false)
     , isNewSolutionGenerated(false)
     , isIterDisplayedChanged(false)
@@ -78,8 +78,16 @@ namespace gwo_viz
     SDL_Color axesColour{ 64, 64, 64, 255 };
     this->createLineSegmentsEntity(0.f, axesPoints, axesColour, 1);
 
+    // Set best solution position.
+    float newBestSolX = cx::getRandomRealUniformly(coordOrigin.x,
+                                                   this->regionWidth);
+    float newBestSolY = cx::getRandomRealUniformly(coordOrigin.y,
+                                                   this->regionHeight);
+
     SDL_Color bestPositionColour{ 12, 104, 47, 255 };
-    this->ent_bestSol = this->createCircleEntity(coordOrigin.x, coordOrigin.y,
+    this->bestSol.x = newBestSolX;
+    this->bestSol.y = newBestSolY;
+    this->ent_bestSol = this->createCircleEntity(newBestSolX, newBestSolY,
                                                  0.f, 5.f, true,
                                                  bestPositionColour, 1);
   }
@@ -91,11 +99,15 @@ namespace gwo_viz
         this->registry.destroy(entity);
       }
 
+      if (this->registry.valid(this->preyEntity)) {
+        this->registry.destroy(this->preyEntity);
+      }
+
       this->solutionEntities.clear();
 
       SDL_Color solutionColour;
-      auto& currIteration = this->solutions[this->currIterDisplayed];
-      for (int32_t i = 0; i < this->numWolves; i++) {
+      auto& currIteration = this->gwoResult.solutions[this->currIterDisplayed];
+      for (int32_t i = 0; i < currIteration.size(); i++) {
         if (i == 0) {
           // Entity for the alpha wolf.
           solutionColour = SDL_Color{ 79, 10, 22, 255 };
@@ -114,15 +126,25 @@ namespace gwo_viz
                                    0.f, 5.f, true, solutionColour, 1)
         );
       }
+
+      SDL_Color preyColour{ 195, 73, 255, 255 };
+      this->preyEntity = this->createCircleEntity(
+        this->gwoResult.wolfPreys[this->currIterDisplayed].x,
+        this->gwoResult.wolfPreys[this->currIterDisplayed].y,
+        2.f, 5.f, true, preyColour, 1);
     }
 
     if (this->isIterDisplayedChanged) {
-      for (int32_t i = 0; i < this->numWolves; i++) {
+      for (int32_t i = 0; i < this->solutionEntities.size(); i++) {
         auto& wolfPos = this->getEntityComponent<cx::Position>(
           solutionEntities[i]);
-        wolfPos.x = this->solutions[this->currIterDisplayed][i].x;
-        wolfPos.y = this->solutions[this->currIterDisplayed][i].y;
+        wolfPos.x = this->gwoResult.solutions[this->currIterDisplayed][i].x;
+        wolfPos.y = this->gwoResult.solutions[this->currIterDisplayed][i].y;
       }
+
+      auto& preyPos = this->getEntityComponent<cx::Position>(this->preyEntity);
+      preyPos.x = this->gwoResult.wolfPreys[this->currIterDisplayed].x;
+      preyPos.y = this->gwoResult.wolfPreys[this->currIterDisplayed].y;
 
       this->isIterDisplayedChanged = false;
     }
@@ -168,6 +190,8 @@ namespace gwo_viz
   {
     ImGui::Begin("Controls");
 
+    ImGui::Text("Best: (%f, %f)", this->bestSol.x, this->bestSol.y);
+
     if (ImGui::Button("Generate Best Position")) {
       auto& bestSolPos = this->getEntityComponent<cx::Position>(
         this->ent_bestSol);
@@ -205,7 +229,7 @@ namespace gwo_viz
                  cx::Point bestSolution,
                  cx::Point minPt,
                  cx::Point maxPt) {
-            this->solutions = this->gwo.optimize(numIterations,
+            this->gwoResult = this->gwo.optimize(numIterations,
                                                  numWolves,
                                                  bestSolution,
                                                  minPt,
@@ -269,9 +293,32 @@ namespace gwo_viz
 
     ImGui::Text("Legend:");
     ImGui::Text("- Flashing Green Circle is the best position.");
+    ImGui::Text("- Purple circle is the estimated prey for next iteration.");
     ImGui::Text("- Red circle is the alpha wolf.");
     ImGui::Text("- Orange circle is the beta wolf.");
     ImGui::Text("- Yellow circle is the alpha wolf.");
+
+    ImGui::Separator();
+
+    if (this->registry.valid(this->preyEntity)) {
+      auto& preyPos = this->getEntityComponent<cx::Position>(this->preyEntity);
+      ImGui::Text("Prey Location: (%f, %f)", preyPos.x, preyPos.y);
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Solution Values");
+
+    ImGui::BeginChild("solutionVals");
+
+    for (int32_t i = 0; i < this->solutionEntities.size(); i++) {
+      const auto& wolf = this->gwoResult.solutions[this->currIterDisplayed][i];
+      float dist = std::fabs(cx::distance2D(bestSol, wolf));
+
+      ImGui::Text("%d: (%f, %f) Dist: %f", i, wolf.x, wolf.y, dist);
+    }
+
+    ImGui::EndChild();
 
     ImGui::End();
   }

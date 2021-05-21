@@ -57,7 +57,7 @@ namespace corex::core
 
   bool operator==(const Vec2& p, const Vec2& q)
   {
-    return floatEquals(p.x, q.x) && floatEquals(p.y, q.x);
+    return floatEquals(p.x, q.x) && floatEquals(p.y, q.y);
   }
 
   bool operator!=(const Vec2& p, const Vec2& q)

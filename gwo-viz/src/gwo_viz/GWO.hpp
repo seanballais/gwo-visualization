@@ -7,6 +7,8 @@
 
 #include <corex/core/ds/Point.hpp>
 
+#include <gwo_viz/GWOResult.hpp>
+
 namespace gwo_viz
 {
   class GWO
@@ -15,7 +17,7 @@ namespace gwo_viz
     GWO();
 
     using Solutions = std::vector<std::vector<cx::Point>>;
-    Solutions optimize(int32_t numIterations,
+    GWOResult optimize(int32_t numIterations,
                        int32_t numWolves,
                        cx::Point bestSolution,
                        cx::Point minPt,

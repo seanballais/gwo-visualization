@@ -23,6 +23,7 @@
 #include <corex/core/events/sys_events.hpp>
 
 #include <gwo_viz/GWO.hpp>
+#include <gwo_viz/GWOResult.hpp>
 
 namespace gwo_viz
 {
@@ -51,8 +52,9 @@ namespace gwo_viz
     int32_t currIterDisplayed;
 
     GWO gwo;
-    GWO::Solutions solutions;
+    GWOResult gwoResult;
     std::vector<Scene::Entity> solutionEntities;
+    Scene::Entity preyEntity;
     bool isRunningGWO;
 
     bool isNewSolutionGenerated;
